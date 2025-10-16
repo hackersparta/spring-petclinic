@@ -1,8 +1,28 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: uatnamespace
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: petclinic
+  namespace: uatnamespace
+spec:
+  type: NodePort
+  selector:
+    app: petclinic
+  ports:
+    - name: http
+      port: 90           # service port
+      targetPort: 7845   # container port
+      nodePort: 30002    # explicit NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: petclinic
+  namespace: uatnamespace
   labels:
     app: petclinic
 spec:
@@ -16,12 +36,14 @@ spec:
         app: petclinic
     spec:
       containers:
-        - name: workload
+        - name: petclinic
           image: nirmal46789/java-application:uat-7
+          ports:
+            - name: http
+              containerPort: 7845
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: postgres
-            # Add these explicit database connection variables
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://demo-db:5432/petclinic
             - name: SPRING_DATASOURCE_USERNAME
@@ -34,23 +56,11 @@ spec:
                 secretKeyRef:
                   name: demo-db
                   key: password
-            - name: SERVICE_BINDING_ROOT
-              value: /bindings
-            - name: SPRING_APPLICATION_JSON
-              value: |
-                {
-                  "server.port": 7845,
-                  "management.endpoint.health.probes.add-additional-paths": true
-                }
-          ports:
-            - name: http
-              containerPort: 7845
-          # Add proper startup delays for health probes
           livenessProbe:
             httpGet:
               path: /livez
               port: http
-            initialDelaySeconds: 60  # Give time for app to start
+            initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
@@ -58,17 +68,7 @@ spec:
             httpGet:
               path: /readyz
               port: http
-            initialDelaySeconds: 45  # Start checking after 45 seconds
+            initialDelaySeconds: 45
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
-          volumeMounts:
-            - mountPath: /bindings/secret
-              name: binding
-              readOnly: true
-      volumes:
-        - name: binding
-          projected:
-            sources:
-              - secret:
-                  name: demo-db
