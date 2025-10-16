@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
         - name: workload
-          image: nirmal46789/java-application:uat-7
+          image: nirmal46789/java-application:uat-8
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: postgres
