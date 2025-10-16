@@ -6,8 +6,8 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: 80
-      targetPort: 8080
+    - port: 90           # service port
+      targetPort: 7845   # app port inside container
   selector:
     app: petclinic
 
@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: workload
-          image: dsyer/petclinic
+          image: nirmal46789/java-application:uat-1   # Jenkins will update this
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: postgres
@@ -39,11 +39,12 @@ spec:
             - name: SPRING_APPLICATION_JSON
               value: |
                 {
+                  "server.port": 7845,
                   "management.endpoint.health.probes.add-additional-paths": true
                 }
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 7845
           livenessProbe:
             httpGet:
               path: /livez
