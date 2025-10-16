@@ -8,10 +8,10 @@ stringData:
   type: "postgresql"
   provider: "postgresql"
   host: "demo-db"
-  port: "5432"          # container port
+  port: "7432"
   database: "petclinic"
-  username: "petclinic"
-  password: "petclinic"
+  username: "user"
+  password: "pass"
 
 ---
 apiVersion: v1
@@ -22,9 +22,8 @@ spec:
   selector:
     app: demo-db
   ports:
-    - name: postgresql
-      port: 7432           # service port (can map to host)
-      targetPort: 5432     # container port
+    - port: 7432
+      targetPort: 7432
 
 ---
 apiVersion: apps/v1
@@ -46,6 +45,9 @@ spec:
       containers:
         - name: postgresql
           image: postgres:18.0
+          ports:
+            - containerPort: 7432
+              name: postgresql
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -62,21 +64,31 @@ spec:
                 secretKeyRef:
                   name: demo-db
                   key: database
-          ports:
-            - containerPort: 5432
-              name: postgresql
+            # Spring Boot datasource variables for Option B
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://demo-db:7432/petclinic
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: password
           livenessProbe:
             tcpSocket:
-              port: 5432
+              port: postgresql
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             tcpSocket:
-              port: 5432
+              port: postgresql
             initialDelaySeconds: 5
-            periodSeconds: 10
+            periodSeconds: 5
           startupProbe:
             tcpSocket:
-              port: 5432
-            initialDelaySeconds: 5
-            periodSeconds: 10
+              port: postgresql
+            initialDelaySeconds: 10
+            periodSeconds: 5
