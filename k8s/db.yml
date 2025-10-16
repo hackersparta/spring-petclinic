@@ -8,7 +8,7 @@ stringData:
   type: "postgresql"
   provider: "postgresql"
   host: "demo-db"
-  port: "7432"
+  port: "5432"  # ← Changed to 5432
   database: "petclinic"
   username: "user"
   password: "pass"
@@ -22,8 +22,8 @@ spec:
   selector:
     app: demo-db
   ports:
-    - port: 7432
-      targetPort: 7432
+    - port: 5432        # ← Service listens on 5432
+      targetPort: 5432  # ← Routes to container port 5432
 
 ---
 apiVersion: apps/v1
@@ -46,7 +46,7 @@ spec:
         - name: postgresql
           image: postgres:18.0
           ports:
-            - containerPort: 7432
+            - containerPort: 5432  # ← Changed to 5432
               name: postgresql
           env:
             - name: POSTGRES_USER
@@ -64,9 +64,9 @@ spec:
                 secretKeyRef:
                   name: demo-db
                   key: database
-            # Spring Boot datasource variables for Option B
+            # Update connection string to use port 5432
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://demo-db:7432/petclinic
+              value: jdbc:postgresql://demo-db:5432/petclinic  # ← Changed port
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
