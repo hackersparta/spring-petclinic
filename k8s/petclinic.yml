@@ -11,7 +11,7 @@ spec:
     - name: http
       port: 90           # Cluster-internal service port
       targetPort: 7845   # Container port where app listens
-      nodePort: 30002    # External port on each node
+      nodePort: 30005    # External port on each node
 
 ---
 apiVersion: apps/v1
