@@ -1,17 +1,4 @@
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: petclinic
-spec:
-  type: NodePort
-  ports:
-    - port: 90           # service port
-      targetPort: 7845   # app port inside container
-  selector:
-    app: petclinic
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,6 +21,19 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: postgres
+            # Add these explicit database connection variables
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://demo-db:5432/petclinic
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: password
             - name: SERVICE_BINDING_ROOT
               value: /bindings
             - name: SPRING_APPLICATION_JSON
@@ -45,14 +45,23 @@ spec:
           ports:
             - name: http
               containerPort: 7845
+          # Add proper startup delays for health probes
           livenessProbe:
             httpGet:
               path: /livez
               port: http
+            initialDelaySeconds: 60  # Give time for app to start
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /readyz
               port: http
+            initialDelaySeconds: 45  # Start checking after 45 seconds
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
           volumeMounts:
             - mountPath: /bindings/secret
               name: binding
