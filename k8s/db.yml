@@ -8,7 +8,7 @@ stringData:
   type: "postgresql"
   provider: "postgresql"
   host: "demo-db"
-  port: "5432"
+  port: "7432"
   database: "petclinic"
   username: "user"
   password: "pass"
@@ -20,7 +20,7 @@ metadata:
   name: demo-db
 spec:
   ports:
-    - port: 5432
+    - port: 7432
   selector:
     app: demo-db
 
@@ -60,7 +60,7 @@ spec:
                   name: demo-db
                   key: database
           ports:
-            - containerPort: 5432
+            - containerPort: 7432
               name: postgresql
           livenessProbe:
             tcpSocket:
