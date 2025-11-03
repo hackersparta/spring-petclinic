@@ -9,9 +9,9 @@ spec:
     app: petclinic
   ports:
     - name: http
-      port: 90           # Cluster-internal service port
-      targetPort: 7845   # Container port where app listens
-      nodePort: 30005    # External port on each node
+      port: 80
+      targetPort: 8080
+      nodePort: 30005
 
 ---
 apiVersion: apps/v1
@@ -31,8 +31,8 @@ spec:
         app: petclinic
     spec:
       containers:
-        - name: workload
-          image: nirmal46789/java-application:petclinic-10
+        - name: petclinic
+          image: nirmal46789/java-application:petclinic-10   # Jenkins will bump this tag
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: postgres
@@ -48,33 +48,18 @@ spec:
                 secretKeyRef:
                   name: demo-db
                   key: password
-            - name: SPRING_APPLICATION_JSON
-              value: |
-                {
-                  "server.port": 7845,
-                  "management.endpoint.health.probes.add-additional-paths": true
-                }
           ports:
             - name: http
-              containerPort: 7845
-          startupProbe:
-            httpGet:
-              path: /readyz
-              port: http
-            initialDelaySeconds: 45
-            periodSeconds: 5
-            failureThreshold: 12
+              containerPort: 8080
           readinessProbe:
             httpGet:
               path: /readyz
               port: http
-            initialDelaySeconds: 60
-            periodSeconds: 5
-            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /livez
               port: http
-            initialDelaySeconds: 90
+            initialDelaySeconds: 45
             periodSeconds: 10
-            failureThreshold: 3
